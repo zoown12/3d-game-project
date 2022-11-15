@@ -14,11 +14,25 @@ class RayCasting:
         for ray,values in enumerate(self.ray_casting_result):
             depth,proj_height,texture,offset=values
 
-            wall_column=self.textures[texture].subsurface(
-                offset*(TEXTURE_SIZE - SCALE),0,SCALE,TEXTURE_SIZE
+            #벽의 프로젝션 높이가 화면의 해상도를 초과하는 특수한 경우
+            if proj_height<HEIGHT: 
+                wall_column=self.textures[texture].subsurface(
+                    offset*(TEXTURE_SIZE - SCALE),0,SCALE,TEXTURE_SIZE
+                    )
+                wall_column=pygame.transform.scale(wall_column,(SCALE,proj_height))
+                wall_pos =(ray*SCALE,HALF_HEIGHT-proj_height//2)
+            else:
+                texture_height=TEXTURE_SIZE * HEIGHT / proj_height
+                wall_column=self.textures[texture].subsurface(
+                    offset * (TEXTURE_SIZE-SCALE),HALF_TEXTURE_SIZE-texture_height//2,
+                    SCALE,texture_height
                 )
-            wall_column=pygame.transform.scale(wall_column,(SCALE,proj_height))
-            wall_pos =(ray*SCALE,HALF_HEIGHT-proj_height//2)
+                wall_column =pygame.transform.scale(wall_column,(SCALE,HEIGHT))
+                wall_pos=(ray *SCALE,0)
+            #frame 드랍 방지 
+            #벽에 접근할 때 광선의 깊이가 0이 되는 경향
+            #텍스처가 이 성능 저하를 제거하기 위해 매우 큰 값으로 높이를 확장하기 시작한다.
+            #벽의 프로젝션 높이를 화면의 해상도랑 맞쳐줘야댐
 
             self.objects_to_render.append((depth,wall_column,wall_pos))
         
