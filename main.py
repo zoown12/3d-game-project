@@ -1,10 +1,14 @@
 import pygame
 import sys
-from settings import *
+from settings1 import *
 from map1 import *
-from player1 import *
 from raycasting import *
+from player1 import *
 from object_renderer import *
+from sprite_object1 import *
+from object_handler import *
+from weapon import *
+
 
 class Game:
     def __init__(self):
@@ -18,20 +22,33 @@ class Game:
     def new_game(self):
         self.map = Map(self)
         self.player = Player(self)
-        self.object_renderer=ObjectRenderer(self)
+        self.object_renderer = ObjectRenderer(self)
         self.raycasting = RayCasting(self)
+        # self.static_sprite = SpriteObject(self)
+        # self.animated_sprite = AnimatedSprite(self)
+        self.object_handler = ObjectHandler(self)
+        self.weapon=Weapon(self)
     
     def update(self):
         self.player.update()
         self.raycasting.update()
+        
+        #object_renderer 완성 후 실행
+        # self.static_sprite.update()
+        # self.animated_sprite.update()
+    
+        self.object_handler.update()
+        self.weapon.update() 
+        
         pygame.display.flip()
-        self.delta_time = self.clock.tick(0)
+        self.delta_time = self.clock.tick(FPS)
         #self.clock.tick(0)
         pygame.display.set_caption(f'{self.clock.get_fps() :.1f}')
         
     def draw(self):
         #self.screen.fill('black')
         self.object_renderer.draw()
+        self.weapon.draw()
         #self.map.draw()
         #self.player.draw()
         
@@ -40,6 +57,7 @@ class Game:
             if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
                 pygame.quit()
                 sys.exit()
+            self.player.single_fire_event(event)
                 
                 
     def run(self):

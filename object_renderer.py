@@ -1,5 +1,5 @@
 import pygame as pg
-from settings import *
+from settings1 import *
 
 class ObjectRenderer:
     def __init__(self,game):
@@ -14,14 +14,14 @@ class ObjectRenderer:
         self.render_game_objects()
 
     def draw_background(self):
-        self.sky_offset = (self.sky_offset +4.0 * self.game.player.rel) %WIDTH
+        self.sky_offset = (self.sky_offset + 4.5 * self.game.player.rel) %WIDTH
         self.screen.blit(self.sky_image,(-self.sky_offset,0))
         self.screen.blit(self.sky_image,(-self.sky_offset +WIDTH,0))
-        #floor
+        # 바닥
         pg.draw.rect(self.screen,FLOOR_COLOR,(0,HALF_HEIGHT,WIDTH,HEIGHT))
         
     def render_game_objects(self):
-        list_objects=self.game.raycasting.objects_to_render
+        list_objects = sorted(self.game.raycasting.objects_to_render, key = lambda t: t[0], reverse = True) #맵에 구조물 고정
         for depth,image,pos in list_objects:
             self.screen.blit(image,pos)
 
