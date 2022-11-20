@@ -7,10 +7,10 @@ class Weapon(AnimatedSprite):
             [pg.transform.smoothscale(img, (self.image.get_width() * scale, self.image.get_height() * scale))
              for img in self.images])
         self.weapon_pos = (HALF_WIDTH - self.images[0].get_width() // 2, HEIGHT - self.images[0].get_height()) #무기의 위치 계산(중앙)
-        self.reloading = False
+        self.reloading = False #스프라이트 이미지수를 다시 로드
         self.num_images = len(self.images)
         self.frame_counter = 0
-        self.damage = 50
+        self.damage = 50 #무기 데미지
 
     def animate_shot(self):
         if self.reloading:
