@@ -9,9 +9,10 @@ class Player:
         self.angle = PLAYER_ANGLE
         self.shot =False
     
-    def single_fire_event(self,event):
+    def single_fire_event(self,event):   #플레이어 샷건 이벤트
         if event.type == pg.MOUSEBUTTONDOWN:
             if event.button == 1 and not self.shot and not self.game.weapon.reloading:
+                self.game.sound.shotgun.play()
                 self.shot=True
                 self.game.weapon.reloading = True
         
