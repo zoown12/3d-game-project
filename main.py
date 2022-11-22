@@ -1,4 +1,4 @@
-import pygame
+import pygame,pygame_menu
 import sys
 from settings1 import *
 from map1 import *
@@ -17,6 +17,9 @@ class Game:
         self.screen = pygame.display.set_mode(RES)
         self.clock = pygame.time.Clock()
         self.delta_time = 1
+        self.global_trigger = False
+        self.global_event = pygame.USEREVENT + 0
+        pygame.time.set_timer(self.global_event,40) #타이머 40밀리초 설정
         self.new_game()
         
     def new_game(self):
@@ -47,17 +50,20 @@ class Game:
         pygame.display.set_caption(f'{self.clock.get_fps() :.1f}')
         
     def draw(self):
-        self.screen.fill('black')
-        #self.object_renderer.draw()
-        #self.weapon.draw()
-        self.map.draw()
-        self.player.draw()
+        #self.screen.fill('black')
+        self.object_renderer.draw()
+        self.weapon.draw()
+        #self.map.draw()
+        #self.player.draw()
         
     def check_events(self):
+        self.global_trigger = False
         for event in pygame.event.get():
             if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
                 pygame.quit()
                 sys.exit()
+            elif event.type == self.global_event:
+                self.global_trigger = True
             self.player.single_fire_event(event)
                 
                 
@@ -66,6 +72,38 @@ class Game:
             self.check_events()
             self.update()
             self.draw()
+
+
+class Menu:
+    pygame.init()
+    surface = pygame.display.set_mode((600, 400))
+    select_map = 0
+
+    def level(self, value):  # 난이도 선택시 호출되는 함수
+        global select_map
+        print("난이도 선택값:", value)
+        if value == 1:
+            select_map = 1
+        elif value == 2:
+            select_map = 2
+
+    def start():  # 게임시작 선택시 호출되는 함수
+        print("게임시작")
+        game = Game()
+        game.run()
+
+    def quit():
+        pygame.quit()
+        sys.exit()
+
+    t = pygame_menu.themes.THEME_DARK
+    t.widget_font = pygame.font.SysFont("gothic", 30)
+
+    menu = pygame_menu.Menu("DOOM", 400, 300, theme=t)
+    menu.add.selector("Level ", [("Hard", 1), ("Easy", 2)], onchange=level)
+    menu.add.button("Start", start)
+    menu.add.button("Quit", quit)
+    menu.mainloop(surface)
 
 if __name__ == '__main__':
     game = Game()

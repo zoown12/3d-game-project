@@ -20,39 +20,64 @@ class NPC(AnimatedSprite):
         self.alive = True
         self.pain = False
         self.ray_cast_value = False
+        self.frame_counter=0 #한 번만 재생되게 사망 애니메이션 필요
 
     def update(self):
         self.check_animation_time()
         self.get_sprite()
         self.run_logic() #npc 움직이기
-        self.draw_ray_cast()
+        #self.draw_ray_cast()
+
+    def movement(self):
+        next_pos = self.game.player.map_pos
+        next_x, next_y = next_pos
+        angle = math.atan(next_y + 0.5 - self.y, next_x + 0.5 - self.x)
+        dx = math.cos(angle) * self.speed
+        dy = math.sin(angle) * self.speed
+        self.check_wall_collision(dx,dy)
+    def animate_death(self):
+        if not self.alive:
+            if self.game.global_trigger and self.frame_counter < len(self.death_images) - 1: #전역 변수의 40밀리초를 통해 npc 죽는 반응속도가 더 빨라짐
+                self.death_images.rotate(-1)
+                self.image = self.death_images[0]
+                self.frame_counter += 1
     def animate_pain(self):
         self.animate(self.pain_images)
         if self.animation_trigger:
             self.pain = False
     def check_hit_in_npc(self):
-        if self.game.player.shot:
-            if HALF_WIDTH - self.sprite_half_width <self.screen_x < HALF_WIDTH + self.sprite_half_width:
+        if self.ray_cast_value and self.game.player.shot: #벽 뒤에서 총격을 확인하면 npc적중 방법 시선 검사(벽 뒤에서 쏘면 적 안맞게)
+            if HALF_WIDTH - self.sprite_half_width <self.screen_x < HALF_WIDTH + self.sprite_half_width: #프레젝션 값을 고려하여 NPC위치 중앙
                 self.game.sound.npc_pain.play()
                 self.game.player.shot = False
-                self.pain = True#프레젝션 값을 고려하여 NPC위치 중앙
+                self.pain = True
+                self.health -=self.game.weapon.damage #데미지입으면 NPC 체력 감소
+                self.check_health() #NPC 체력 update
+
+    def check_health(self):
+        if self.health<1: #체력이 떨어지면 사운드,생동성 KILL
+            self.alive = False
+            self.game.sound.npc_death.play()
 
     def run_logic(self):
         if self.alive:
+            self.ray_cast_value=self.ray_cast_player_npc()
             self.check_hit_in_npc()
             if self.pain:
                 self.animate_pain()
             else:
                 self.animate(self.idle_images)
+        else:
+            self.animate_death()
 
     @property
     def map_pos(self):
         return int(self.x), int(self.y)
 
     def ray_cast_player_npc(self):
-        if self.game.player.map_pos == self.map_pos:
+        if self.game.player.map_pos == self.map_pos: #플레이어가 적과 같은 타일에 있는지 확인
             return True
-        wall_dist_v, wall_dist_h = 0,0
+        wall_dist_v, wall_dist_h = 0,0 #수직,수평을 위해 플레이어와 벽까지의 거리
         player_dist_v, player_dist_h = 0,0
 
         self.ray_casting_result = []
@@ -77,7 +102,7 @@ class NPC(AnimatedSprite):
         for i in range(MAX_DEPTH):
             tile_hor = int(x_hor), int(y_hor)
             if tile_hor == self.map_pos:
-                player_dist_h = depth_hor
+                player_dist_h = depth_hor #하나의 광선에 대해 raycast하는 세타 각도 이 광선이 벽이나 NPC에 부딪히면 기록
                 break
             if tile_hor in self.game.map.world_map:
                 wall_dist_h = depth_hor
@@ -109,9 +134,10 @@ class NPC(AnimatedSprite):
             depth_vert += delta_depth
 
         player_dist = max(player_dist_v,player_dist_h)
-        wall_dist = max(wall_dist_v, wall_dist_h)
+        wall_dist = max(wall_dist_v, wall_dist_h) #벽과 플레이어의 거리의 최대값
 
-        if 0<player_dist<wall_dist or not wall_dist:
+
+        if 0<player_dist<wall_dist or not wall_dist: #플레이어와 npc 사이에 직접적인 시선있는지 확인
             return True
         return False
 
