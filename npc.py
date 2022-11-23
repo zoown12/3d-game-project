@@ -1,6 +1,7 @@
 from sprite_object1 import *
 from random import randint,random,choice
 
+
 class NPC(AnimatedSprite):
     def __init__(self,game,path='resources/sprites/npc/soldier/0.png', pos=(10.5, 5.5),
                  scale=0.6, shift =0.38, animation_time=180):
@@ -21,20 +22,32 @@ class NPC(AnimatedSprite):
         self.pain = False
         self.ray_cast_value = False
         self.frame_counter=0 #한 번만 재생되게 사망 애니메이션 필요
+        self.player_search_trigger = False
 
     def update(self):
         self.check_animation_time()
         self.get_sprite()
         self.run_logic() #npc 움직이기
-        #self.draw_ray_cast()
+        self.draw_ray_cast()
+
+    def check_wall(self, x, y):
+        return (x, y) not in self.game.map.world_map
+
+    def check_wall_collision(self, dx, dy):
+        if self.check_wall(int(self.x + dx * self.size), int(self.y)): #적 자체 크기만 고려 size
+            self.x += dx
+        if self.check_wall(int(self.x), int(self.y + dy * self.size)):
+            self.y += dy
 
     def movement(self):
-        next_pos = self.game.player.map_pos
-        next_x, next_y = next_pos
-        angle = math.atan(next_y + 0.5 - self.y, next_x + 0.5 - self.x)
-        dx = math.cos(angle) * self.speed
-        dy = math.sin(angle) * self.speed
-        self.check_wall_collision(dx,dy)
+        next_pos = self.game.pathfinding.get_path(self.map_pos, self.game.player.map_pos)
+        next_x, next_y = next_pos #플레이어가 있는 타일로 이동.
+
+        pg.draw.rect(self.game.screen,'blue',(100*next_x, 100*next_y,100,100))
+        angle = math.atan2(next_y + 0.5 - self.y, next_x + 0.5 - self.x) #NPC의 각도와 타일의 중심
+        dx = math.cos(angle) * self.speed #x방향 -> cos 계산
+        dy = math.sin(angle) * self.speed#y방향 -> sin 계산
+        self.check_wall_collision(dx, dy) #NPC 이동
     def animate_death(self):
         if not self.alive:
             if self.game.global_trigger and self.frame_counter < len(self.death_images) - 1: #전역 변수의 40밀리초를 통해 npc 죽는 반응속도가 더 빨라짐
@@ -63,8 +76,18 @@ class NPC(AnimatedSprite):
         if self.alive:
             self.ray_cast_value=self.ray_cast_player_npc()
             self.check_hit_in_npc()
+
             if self.pain:
                 self.animate_pain()
+
+            elif self.ray_cast_value:
+                self.player_search_trigger = True
+                self.animate(self.walk_images)
+                self.movement()
+
+            elif self.player_search_trigger: #벽뒤에 있어도 플레이어를 찾 을수 있게 도와줌.
+                self.animate(self.walk_images)
+                self.movement()
             else:
                 self.animate(self.idle_images)
         else:
