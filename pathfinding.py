@@ -1,7 +1,7 @@
 from collections import deque
 
 
-class PathFinding:
+class PathFinding: #너비 우선 탐색
     def __init__(self, game):
         self.game = game
         self.map = game.map.mini_map
