@@ -47,7 +47,7 @@ class NPC(AnimatedSprite):
         if next_pos not in self.game.object_handler.npc_positions:
             angle = math.atan2(next_y + 0.5 - self.y, next_x + 0.5 - self.x) #NPC의 각도와 타일의 중심
             dx = math.cos(angle) * self.speed #x방향 -> cos 계산
-            dy = math.sin(angle) * self.speed#y방향 -> sin 계산ddddddddd
+            dy = math.sin(angle) * self.speed#y방향 -> sin 계산
             self.check_wall_collision(dx, dy) #NPC 이동
 
     def attack(self):
