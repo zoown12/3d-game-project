@@ -54,3 +54,6 @@ class PathFinding: #너비 우선 탐색
                     self.graph[(x, y)] = self.graph.get((x, y), []) + self.get_next_nodes(x, y)
 
 ```
+## 조작방벙
+
+W A S D  + 좌클릭
